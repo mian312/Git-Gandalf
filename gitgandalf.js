@@ -1,6 +1,9 @@
 const { runLLM } = require("./llm/runner");
 const { extractMetadata } = require("./diffMetadata");
 const { buildPrompt } = require("./llm/prompt");
+const { renderReview } = require("./renderer/terminal");
+const { normalizeJudgment } = require("./llm/normalize");
+const { decidePolicy } = require("./policy/decision");
 
 const MAX_DIFF_SIZE = 200 * 1024;
 
@@ -24,10 +27,10 @@ async function main() {
   }
 
   const metadata = extractMetadata(input);
-
   const prompt = buildPrompt(metadata, input);
 
   let llmOutput;
+
   try {
     llmOutput = await runLLM(prompt);
   } catch (err) {
@@ -35,8 +38,31 @@ async function main() {
     process.exit(1);
   }
 
-  console.log("Git Gandalf Raw LLM Output:\n");
-  console.log(llmOutput);
+  let normalized;
+
+  try {
+    normalized = normalizeJudgment(llmOutput);
+  } catch (err) {
+    // Fallback: unable to parse LLM response, default to WARN to avoid false positives
+    console.warn(`Git Gandalf Review\nWarning: Could not parse LLM response: ${err.message}`);
+    normalized = {
+      risk: "MEDIUM",
+      issues: ["Failed to parse LLM response - manual review recommended"],
+      summary: `LLM output parse error: ${err.message}`
+    };
+  }
+
+  const decisionResult = decidePolicy(normalized);
+
+  const output = renderReview(decisionResult);
+
+  console.log(output);
+
+  if (decisionResult.decision === "BLOCK") {
+    process.exit(1);
+  } else {
+    process.exit(0);
+  }
 }
 
 main();
