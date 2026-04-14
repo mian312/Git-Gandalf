@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-const MAX_DIFF_SIZE = 2 * 1024; // 200 KB
+const MAX_DIFF_SIZE = 200 * 1024;
 
 function readStdin() {
   return new Promise((resolve, reject) => {
@@ -33,7 +33,7 @@ function normalizeDiff(diff) {
 
     if (!rawDiff || rawDiff.trim() === '') {
       console.log(
-        "🧙 Git Gandalf Review\nNo staged changes detected. Skipping analysis."
+        "Git Gandalf Review\nNo staged changes detected. Skipping analysis."
       );
       process.exit(0);
     }
@@ -42,23 +42,23 @@ function normalizeDiff(diff) {
 
     if (diff.length === 0) {
       console.log(
-        "🧙 Git Gandalf Review\nNo meaningful changes detected."
+        "Git Gandalf Review\nNo meaningful changes detected."
       );
       process.exit(0);
     }
 
-    console.log("🧙 Git Gandalf Review (no analysis yet)");
+    console.log("Git Gandalf Review (no analysis yet)");
 
     process.exit(0);
 
   } catch (err) {
     if (err.message === 'Diff too large') {
       console.error(
-        "🧙 Git Gandalf Review\n❌ Diff exceeds size limit. Commit blocked."
+        "Git Gandalf Review\n Diff exceeds size limit. Commit blocked."
       );
     } else {
       console.error(
-        "🧙 Git Gandalf Review\n❌ Failed to read diff safely."
+        "Git Gandalf Review\n Failed to read diff safely."
       );
     }
 
