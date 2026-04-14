@@ -62,6 +62,6 @@ function normalizeDiff(diff) {
       );
     }
 
-    process.exit(1); // FAIL CLOSED
+    process.exit(1);
   }
 })();
