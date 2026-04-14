@@ -1,5 +1,6 @@
 const { runLLM } = require("./llm/runner");
 const { extractMetadata } = require("./diffMetadata");
+const { buildPrompt } = require("./llm/prompt");
 
 const MAX_DIFF_SIZE = 200 * 1024;
 
@@ -17,49 +18,25 @@ async function main() {
     process.exit(0);
   }
 
-  if (input.length > MAX_DIFF_SIZE) {
-    console.error("Git Gandalf Review\nERROR: Diff too large");
+  if (Buffer.byteLength(input, "utf8") > MAX_DIFF_SIZE) {
+    console.error("Git Gandalf Review\nDiff too large to process safely.");
     process.exit(1);
   }
 
-  const normalized = input.replace(/\r\n/g, "\n");
+  const metadata = extractMetadata(input);
 
+  const prompt = buildPrompt(metadata, input);
+
+  let llmOutput;
   try {
-    // ✅ Ticket 4 integration
-    const metadata = extractMetadata(normalized);
-
-    // ✅ Send BOTH metadata + raw diff
-    const prompt =
-      "DIFF METADATA:\n" +
-      JSON.stringify(metadata, null, 2) +
-      "\n\nRAW DIFF:\n" +
-      normalized;
-
-    const response = await runLLM(prompt);
-
-    console.log("Git Gandalf Review (LLM Output)\n");
-    console.log(response);
-
-    process.exit(0);
+    llmOutput = await runLLM(prompt);
   } catch (err) {
-    if (err.message === "LLM_TIMEOUT") {
-      console.log("Git Gandalf Review\nWARN: LLM timed out");
-      process.exit(0);
-    }
-
-    if (err.message === "LLM_NOT_RUNNING") {
-      console.log("Git Gandalf Review\nWARN: Ollama is not running");
-      process.exit(0);
-    }
-
-    if (err.message === "LLM_INVALID_RESPONSE") {
-      console.error("Git Gandalf Review\nERROR: Invalid LLM response");
-      process.exit(1);
-    }
-
-    console.error("Git Gandalf Review\nERROR:", err.message);
+    console.error("Git Gandalf Review\nLLM execution failed.");
     process.exit(1);
   }
+
+  console.log("Git Gandalf Raw LLM Output:\n");
+  console.log(llmOutput);
 }
 
 main();
