@@ -1,4 +1,5 @@
 const http = require("http");
+require('dotenv').config();
 
 function runLLM(prompt) {
   const HOST = process.env.HOST;
