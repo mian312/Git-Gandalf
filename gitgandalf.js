@@ -1,5 +1,5 @@
 const { runLLM } = require("./llm/runner");
-const { extractMetadata } = require("./diffMetadata");
+const { extractMetadata, filterBinaryFiles } = require("./diffMetadata");
 const { buildPrompt } = require("./llm/prompt");
 const { renderReview } = require("./renderer/terminal");
 const { normalizeJudgment } = require("./llm/normalize");
@@ -28,8 +28,18 @@ async function main() {
     process.exit(1);
   }
 
-  const metadata = extractMetadata(input);
-  const prompt = buildPrompt(metadata, input);
+  let metadata;
+  let filteredDiff;
+
+  try {
+    metadata = extractMetadata(input);
+    filteredDiff = filterBinaryFiles(input);
+  } catch (err) {
+    console.error("Git Gandalf Review\nFailed to parse diff:", err.message);
+    process.exit(1);
+  }
+
+  const prompt = buildPrompt(metadata, filteredDiff);
 
   let normalized;
 

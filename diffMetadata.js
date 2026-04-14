@@ -51,4 +51,42 @@ function extractMetadata(diffText) {
   };
 }
 
-module.exports = { extractMetadata };
+function filterBinaryFiles(diffText) {
+  if (!diffText || typeof diffText !== "string") {
+    throw new Error("Invalid diff input");
+  }
+
+  const lines = diffText.split("\n");
+  const filteredLines = [];
+  let skipSection = false;
+  let currentFileIsBinary = false;
+
+  for (let line of lines) {
+    // Check if this is a new file
+    const isDiffLine = line.startsWith("diff --git");
+    
+    if (isDiffLine) {
+      // Reset binary flag for the new file
+      currentFileIsBinary = false;
+      skipSection = false;
+      filteredLines.push(line);
+      continue;
+    }
+
+    // Check if this is a binary marker
+    if (line.includes("Binary files") && line.includes("differ")) {
+      currentFileIsBinary = true;
+      skipSection = true;
+      continue;
+    }
+
+    // Only add non-binary content
+    if (!skipSection) {
+      filteredLines.push(line);
+    }
+  }
+
+  return filteredLines.join("\n");
+}
+
+module.exports = { extractMetadata, filterBinaryFiles };
