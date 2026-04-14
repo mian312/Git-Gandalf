@@ -27,7 +27,13 @@ git clone <your-repo-url>
 cd git-gandalf
 ```
 
-### 2. Drop in the Git Hook
+### 2. Install Dependencies
+
+```bash
+npm install
+```
+
+### 3. Drop in the Git Hook
 
 Create this file:
 
@@ -45,7 +51,7 @@ git diff --cached | node gitgandalf.js
 exit $?
 ```
 
-### 3. Make It Executable
+### 4. Make It Executable
 
 ```bash
 chmod +x .git/hooks/pre-commit
@@ -205,4 +211,3 @@ All the core features are done and tested:
 Throw issues at us. Make pull requests. Let's make code safer together.
 
 Have fun, and may your commits always be clean. 🧙‍♂️
-
