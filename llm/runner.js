@@ -1,10 +1,15 @@
 const http = require("http");
 
-const HOST = process.env.HOST;
-const MODEL = process.env.MODEL;
-const TIMEOUT_MS = parseInt(process.env.TIMEOUT_MS, 10);
-
 function runLLM(prompt) {
+  const HOST = process.env.HOST;
+  const MODEL = process.env.MODEL;
+  const TIMEOUT_MS = parseInt(process.env.TIMEOUT_MS, 10);
+
+  // Validate required environment variables
+  if (!HOST || !MODEL || !TIMEOUT_MS) {
+    throw new Error("Missing required environment variables: HOST, MODEL, and TIMEOUT_MS must be set");
+  }
+
   return new Promise((resolve, reject) => {
     const data = JSON.stringify({
       model: MODEL,
