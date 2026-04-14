@@ -1,19 +1,16 @@
 function extractJSON(raw) {
-  // Try direct parsing first
   try {
     return JSON.parse(raw);
   } catch {
-    // Fallback: extract JSON from markdown code blocks
     const jsonMatch = raw.match(/```(?:json)?\s*([\s\S]*?)```/);
     if (jsonMatch) {
       try {
         return JSON.parse(jsonMatch[1]);
       } catch {
-        // Continue to next fallback
+        // TODO
       }
     }
 
-    // Last fallback: find first { and last } and try to parse
     const start = raw.indexOf("{");
     const end = raw.lastIndexOf("}");
     if (start !== -1 && end !== -1 && end > start) {

@@ -4,6 +4,7 @@ const { buildPrompt } = require("./llm/prompt");
 const { renderReview } = require("./renderer/terminal");
 const { normalizeJudgment } = require("./llm/normalize");
 const { decidePolicy } = require("./policy/decision");
+const { getExitCode } = require("./policy/exit");
 
 const MAX_DIFF_SIZE = 200 * 1024;
 
@@ -58,11 +59,8 @@ async function main() {
 
   console.log(output);
 
-  if (decisionResult.decision === "BLOCK") {
-    process.exit(1);
-  } else {
-    process.exit(0);
-  }
+  const exitCode = getExitCode(decisionResult.decision);
+  process.exit(exitCode);
 }
 
 main();
