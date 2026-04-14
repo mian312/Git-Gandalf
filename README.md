@@ -27,15 +27,7 @@ git clone <your-repo-url>
 cd git-gandalf
 ```
 
-### 2. Install Dependencies
-
-```bash
-npm install
-```
-
-*(Or skip this if you're living your best minimalist life with no deps.)*
-
-### 3. Drop in the Git Hook
+### 2. Drop in the Git Hook
 
 Create this file:
 
@@ -48,18 +40,12 @@ And paste this in:
 ```sh
 #!/bin/sh
 
-DIFF=$(git diff --cached)
-
-if [ -z "$DIFF" ]; then
-  exit 0
-fi
-
-echo "$DIFF" | node gitgandalf.js
+git diff --cached | node gitgandalf.js
 
 exit $?
 ```
 
-### 4. Make It Executable
+### 3. Make It Executable
 
 ```bash
 chmod +x .git/hooks/pre-commit
