@@ -5,6 +5,7 @@ const { renderReview } = require("./renderer/terminal");
 const { normalizeJudgment } = require("./llm/normalize");
 const { decidePolicy } = require("./policy/decision");
 const { getExitCode } = require("./policy/exit");
+const { createFailureJudgment } = require("./policy/failure");
 
 const MAX_DIFF_SIZE = 200 * 1024;
 
@@ -30,33 +31,35 @@ async function main() {
   const metadata = extractMetadata(input);
   const prompt = buildPrompt(metadata, input);
 
-  let llmOutput;
-
-  try {
-    llmOutput = await runLLM(prompt);
-  } catch (err) {
-    console.error("Git Gandalf Review\nLLM execution failed.");
-    process.exit(1);
-  }
-
   let normalized;
 
   try {
-    normalized = normalizeJudgment(llmOutput);
+    const llmOutput = await runLLM(prompt);
+
+    try {
+      normalized = normalizeJudgment(llmOutput);
+    } catch (err) {
+      normalized = createFailureJudgment("INVALID_LLM_OUTPUT", err);
+    }
+
   } catch (err) {
-    // Fallback: unable to parse LLM response, default to WARN to avoid false positives
-    console.warn(`Git Gandalf Review\nWarning: Could not parse LLM response: ${err.message}`);
-    normalized = {
-      risk: "MEDIUM",
-      issues: ["Failed to parse LLM response - manual review recommended"],
-      summary: `LLM output parse error: ${err.message}`
-    };
+    if (err.message && err.message.toLowerCase().includes("timeout")) {
+      normalized = createFailureJudgment("LLM_TIMEOUT", err);
+    } else {
+      normalized = createFailureJudgment("LLM_UNAVAILABLE", err);
+    }
   }
 
-  const decisionResult = decidePolicy(normalized);
+  let decisionResult;
+
+  try {
+    decisionResult = decidePolicy(normalized);
+  } catch (err) {
+    const fallback = createFailureJudgment("INTERNAL_ERROR", err);
+    decisionResult = decidePolicy(fallback);
+  }
 
   const output = renderReview(decisionResult);
-
   console.log(output);
 
   const exitCode = getExitCode(decisionResult.decision);
